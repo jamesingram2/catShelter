@@ -16,7 +16,15 @@ module.exports = (req, res) => {
       );
       const index = fs.createReadStream(filepath);
       index.on("data", (data) => {
-         res.write(data);
+         console.log("breeds are: ", breeds); // Array of breeds
+         let catBreedsPlaceHolder = breeds.map(
+            (breed) => `<option value="${breed}">${breed}</option>`
+         );
+         console.log(catBreedsPlaceHolder); // Array of HTML options
+         let modifiedData = data
+            .toString()
+            .replace("{{catBreeds}}", catBreedsPlaceHolder);
+         res.write(modifiedData);
       });
       index.on("end", () => {
          res.end();
@@ -27,7 +35,42 @@ module.exports = (req, res) => {
 
       // CREATE CAT ROUTE
    } else if (pathname === "/cats/add-cat" && req.method === "POST") {
-      // TODO
+      let form = new formidable.IncomingForm();
+      form.parse(req, (err, fields, files) => {
+         if (err) {
+            console.log(err);
+            return;
+         }
+         // console.log("fields are: ", fields);
+         console.log("files are: ", files);
+         // console.log("uploaded file path is ", files.upload.filepath);
+         let oldPath = files.upload.filepath;
+         let newPath = path.normalize(
+            path.join(
+               __dirname,
+               "../content/images/" + files.upload.originalFilename
+            )
+         );
+         // console.log(oldPath);
+         // console.log(newPath);
+         fs.rename(oldPath, newPath, (err) => {
+            if (err) throw err;
+            console.log("file was uploaded successfully");
+         });
+         fs.readFile("./data/cats.json", "utf-8", (err, data) => {
+            let allCats = JSON.parse(data);
+            allCats.push({
+               id: (CacheStorage.length = 1),
+               ...fields,
+               image: files.upload.originalFilename,
+            });
+            let json = JSON.stringify(allCats);
+            fs.writeFile("./data/cats.json", json, () => {
+               res.writeHead(302, { location: "/" });
+               res.end();
+            });
+         });
+      });
    } else if (pathname === "/cats/add-breed" && req.method === "GET") {
       const filepath = path.normalize(
          path.join(__dirname, "../views/addBreed.html")
