@@ -25,9 +25,9 @@ module.exports = (req, res) => {
          // console.log("current cats are:", cats);
          catsHTML = cats.map((cat) => {
             return `<li>
-            <img src="${path.join("./content/images/" + cat.image)}" alt="${
-               cat.name
-            }">
+            <img class="img-fluid" src="${path.join(
+               "./content/images/" + cat.image
+            )}" alt="${cat.name}">
          <h3>${cat.name}</h3>
          <p><span>Breed: </span>${cat.breed}</p>
          <p><span>Description: </span>${cat.description}</p>
